@@ -13,3 +13,5 @@ The key to a successful ft_printf is a well-structured and extensible code.
 + %x Prints a number in hexadecimal (base 16) lowercase format.
 + %X Prints a number in hexadecimal (base 16) uppercase format.
 + %% Prints a percent sign.
+## My Result
+![20BA956C-85C2-4C60-A863-B4465B5D774B_4_5005_c](https://github.com/Lucabhm/Printf/assets/144374574/802ff424-417d-4f96-b920-a7d2d3cccff1)
