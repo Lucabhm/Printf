@@ -1,48 +1,49 @@
 NAME = libftprintf.a
-CC = cc
-CFLAGS = -Wall -Wextra -Werror
-FILES = $(shell find . -type f -name "*.c" | wc -l | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//')
-CALC = $(shell echo $$((($(COUNT) * 100) / $(FILES))))
-RESETLINE = \r\033[K
-BLUE = \033[1;34m
-YELLOW = \033[0;33m
-RED = \033[0;31m
-DEF_COLOR = \033[0m
-COUNT = 1
-SRCS = ft_printf.c \
+CFLAGS = -Wall -Werror -Wextra
+SRC = ft_printf.c \
 		ft_printvalue.c \
 		ft_helper.c \
 		ft_helper_helper.c
-OBJS = $(SRCS:.c=.o)
 
-$(NAME):		msg_mand $(OBJS)
-				@ar rc $(NAME) $(OBJS)
+OBJDIR = objs/
+OBJ = $(SRC:.c=.o)
+OBJS_PATH = $(addprefix $(OBJDIR), $(OBJ))
 
-all:			$(NAME)
+$(NAME):	logo $(OBJS_PATH)
+			@ar rc $(NAME) $(OBJS_PATH)
 
-%.o:%.c
-				@cc -c $^ -o $@ $(CFLAGS)
-				@echo "$(RESETLINE)$(BLUE)$@ $(COUNT)/$(FILES) $(CALC)/100%$(DEF_COLOR)\c"
-				@if [ $(COUNT) -eq $(FILES) ]; then echo ""; fi
-				$(eval COUNT := $(shell echo $$(($(COUNT) + 1))))
+all:		$(OBJDIR) $(NAME)
+
+$(OBJDIR)%.o: %.c | $(OBJDIR)
+			@mkdir -p $(dir $@)
+			@cc -c $< -o $@ $(CFLAGS)
+			@if [ "$(filter $<,$(SRC))" ]; then $(MAKE) progress; fi
+
+$(OBJDIR):
+			@mkdir -p $(OBJDIR)
+
+progress:
+			@$(eval PROGRESS := $(shell echo $$(($(shell find $(SRC) -name '*.c' | wc -l) - $$(find $(OBJDIR) -name '*.o' | wc -l)))))
+			@$(eval TOTAL := $(shell find $(SRC) -name '*.c' | wc -l))
+			@$(eval PERCENT := $(shell echo "scale=2; (1 - $(PROGRESS) / $(TOTAL)) * 100" | bc))
+			@$(eval BAR := $(shell printf '=%.0s' {1..$(shell echo "scale=0; $(PERCENT) / 2" | bc)}))
+			@printf "\r[%-50s] %s%%" "$(BAR)" "$(PERCENT)"
+			@if [ "$(PERCENT)" = "100.00" ]; then printf "\n"; fi
+			@if [ "$(PERCENT)" = "100.00" ]; then printf "\033[0;32mprintf mandotory compiled\033[0m\n"; fi
 
 clean:
-				@echo "$(BLUE)Printf:$(DEF_COLOR) $(RED)Cleaning object files...$(DEF_COLOR)"
-				@rm -f $(OBJS)
+			@rm -rf $(OBJDIR)
 
-fclean:			clean
-				@echo "$(BLUE)Printf:$(DEF_COLOR) $(RED)Cleaning executable files...$(DEF_COLOR)"
-				@rm -f $(NAME)
+fclean:		clean
+			@rm -f $(NAME)
 
 re: fclean all
 
-reset:
-			$(eval COUNT := 1)
+logo:
+			@echo "  ___ ___ ___ _  _ _____ ___ "
+			@echo " | _ \ _ \_ _| \| |_   _| __|"
+			@echo " |  _/   /| || .  | | | | _| "
+			@echo " |_| |_|_\___|_|\_| |_| |_|  "
+			@echo "                             "
 
-msg_mand:
-			@echo "$(YELLOW)Compiling Printf Mandotory$(DEF_COLOR)"
-
-msg_bonus:
-			@echo "$(YELLOW)Compiling Printf Bonus$(DEF_COLOR)"
-
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re progress logo
